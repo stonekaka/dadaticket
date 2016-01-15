@@ -1,0 +1,893 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head profile="http://gmpg.org/xfn/11">
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>Jeffrey Friedl&#039;s Blog &raquo; Simple JSON Encode/Decode in Pure Lua</title>
+<link rel="stylesheet" href="http://regex.info/blog/wp-content/themes/jfriedl/style.css" type="text/css" media="screen"/>
+<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://regex.info/blog/feed"/>
+<link rel="alternate" type="text/xml" title="RSS .92" href="http://regex.info/blog/feed/rss"/>
+<link rel="publisher" href="https://plus.google.com/+JeffreyFriedl/"/>
+<link rel="author" href="https://plus.google.com/+JeffreyFriedl/"/>
+<link rel="alternate" type="application/atom+xml" title="Atom 0.3" href="http://regex.info/blog/feed/atom"/>
+<link rel="pingback" href="http://regex.info/blog/xmlrpc.php"/>
+		<script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"http:\/\/s.w.org\/images\/core\/emoji\/72x72\/","ext":".png","source":{"concatemoji":"http:\/\/regex.info\/blog\/wp-includes\/js\/wp-emoji-release.min.js?ver=4.3.2"}};
+			!function(a,b,c){function d(a){var c=b.createElement("canvas"),d=c.getContext&&c.getContext("2d");return d&&d.fillText?(d.textBaseline="top",d.font="600 32px Arial","flag"===a?(d.fillText(String.fromCharCode(55356,56812,55356,56807),0,0),c.toDataURL().length>3e3):(d.fillText(String.fromCharCode(55357,56835),0,0),0!==d.getImageData(16,16,1,1).data[0])):!1}function e(a){var c=b.createElement("script");c.src=a,c.type="text/javascript",b.getElementsByTagName("head")[0].appendChild(c)}var f,g;c.supports={simple:d("simple"),flag:d("flag")},c.DOMReady=!1,c.readyCallback=function(){c.DOMReady=!0},c.supports.simple&&c.supports.flag||(g=function(){c.readyCallback()},b.addEventListener?(b.addEventListener("DOMContentLoaded",g,!1),a.addEventListener("load",g,!1)):(a.attachEvent("onload",g),b.attachEvent("onreadystatechange",function(){"complete"===b.readyState&&c.readyCallback()})),f=c.source||{},f.concatemoji?e(f.concatemoji):f.wpemoji&&f.twemoji&&(e(f.twemoji),e(f.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+<link rel='canonical' href='http://regex.info/blog/lua/json' />
+<script type="text/javascript">
+function mobin(obj,id) {
+document.getElementById(id).style.visibility="visible";
+obj.style.backgroundColor = 'aqua';
+}
+function mobout(obj,id) {
+document.getElementById(id).style.visibility="hidden";
+obj.style.backgroundColor = 'transparent';
+}
+
+function jeffs_autoresize(obj, notice_id, size)
+{
+if (typeof(screen.availHeight) == 'number') {
+var Ratio = size ? size : 0.45;
+var H = Math.round(screen.availHeight * Ratio);
+if (obj.height > H * 1.1) {
+var W =  Math.round(obj.width/(obj.height/H));
+obj.width = W;
+obj.height = H;
+var icon = document.getElementById('A' + obj.id);
+if (icon) {
+icon.style.display = 'inline-block';
+var note = document.getElementById(notice_id);
+if (note) {
+if (note.count)
+note.count++;
+else {
+note.count = 1;
+document.getElementById(notice_id).style.display = 'block';
+}}}}}}
+function jeffs_unautoresize(id, W, H, notice_id)
+{
+var img = document.getElementById(id);
+if (img.height != H)
+{
+img.width  = W;
+img.height = H;
+var marker = document.getElementById('A' + id)
+marker.style.display = 'none';
+var note = document.getElementById(notice_id);
+if (note)
+if (! --note.count)
+note.style.display = 'none'
+}
+}
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-24230518-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+</head><body>
+<div id="page">
+<div id="header">
+<a class="blogname" href="http://regex.info/blog/">Jeffrey Friedl&#039;s Blog</a>
+<div id='mini_toc'>
+   <a class='qtext' href="http://regex.info/blog/">Home</a>
+   &bull;
+   <a class='qtext' href='http://regex.info/blog/map'>Photo Map</a>
+   <br/>
+   <a class='qtext' href='http://regex.info/blog/toc'>TOC</a>
+   &bull;
+   <a class='qtext' href='http://regex.info/blog/photostream/'>Photostream</a>
+</div>
+<div id='jname'><span style='font-size:150%'>松中ジェフリーのブログ</span>
+<br/><span style='font-size:90%'>文書は英語ですが、写真は共通</span></div>
+
+<br/><span class="blogdesc">Not a photo blog. A personal blog with photos.</span>
+</div>
+
+<div id="content" class="widecolumn">
+
+
+  <div class="post_container" id='post1584'>
+      <div class="post_header">
+
+        <div id="post-1584" class="post_title">Simple JSON Encode/Decode in Pure Lua</div>
+
+                   <div class="post_timestamp">
+             <span class="post_date">August 1st, 2010</span>
+             <span class="post_time">1:56am</span>
+             <span class="post_tz">JST</span>
+             <span class="post_ago">(5 years, 5 months ago)</span>
+           </div>
+        
+      </div>
+
+      <div id='post_guts' class="post_guts">
+       
+
+<div style='float:right; border:solid 1px #88F; margin: 0 0 20px 2em; padding: 15px 20px; background-color: #922'>
+<a href='http://regex.info/blog/lua'>More Lua code</a>
+</div>
+
+
+
+<p>I've coded up some simple <a href='http://json.org/'
+class='quiet'>JSON</a> encode/decode routines in pure <a class='quiet'
+href='http://www.lua.org/'>Lua</a> and thought I'd share them in case
+anyone else would find them useful. <span class='nobr'>I use them</span> in Adobe Lightroom, but they're
+pure <span class='nobr'>Lua 5,</span> so can be used anywhere Lua is.</p>
+
+<div style='font-size:75%; width:200px;float:right; border:solid 1px #555; padding:5px;text-align:center'>
+<a rel="license" href="http://creativecommons.org/licenses/by/3.0/deed.en_US">
+<img src="http://i.creativecommons.org/l/by/3.0/88x31.png" width="88" height="31"
+alt="Creative Commons License"
+id="i88x31"
+style="border-width:0"
+title="Creative Commons License"/></a>
+<br/>
+<span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">JSON Encode/Decode in Pure LUA</span> by
+<a xmlns:cc="http://creativecommons.org/ns#" href="http://regex.info/blog/lua/json" property="cc:attributionName" rel="cc:attributionURL">Jeffrey Friedl</a>
+is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/deed.en_US">Creative Commons <span class='nobr'>Attribution 3.0</span> Unported License</a>.
+</div>
+
+<div style='margin: 0 auto; width:50%; text-align:center; padding: 10px 0' class='bg-A'><a href='http://regex.info/code/JSON.lua' class='quiet'>Download <b>JSON.lua</b></a>
+<br/><span class='nobr'>Version 20141223.14 (version 14: Dec 23, 2014)</span>
+</div>
+
+
+
+<style type="text/css">
+span.comment  { color : #BB0 }
+span.variable { color: #800 }
+span.object   { color: cyan }
+span.method   { color: green }
+span.pseudo   { color: gray }
+</style>
+<p>Full docs and changelog are in the code itself, but basic use is:</p>
+<div style='border-left: 3px solid #444; margin-left:1em; padding: 5px 1em; background-color:#222'>
+<pre>
+<span class='object'>JSON</span> = (loadfile "JSON.lua")() <span class='comment'>-- <i>one-time load of the routines</i></span>
+
+
+local <span class='variable'>lua_value</span> = <span class='object'>JSON</span><span class='method'>:decode(</span><span class='pseudo'>raw_json_text</span><span class='method'>)</span> <span class='comment'>-- <i>decode example</i></span>
+
+
+local <span class='variable'>raw_json_text</span>    = <span class='object'>JSON</span><span class='method'>:encode(</span><span class='pseudo'>lua_table_or_value</span><span class='method'>)</span>        <span class='comment'>-- <i>encode example</i></span>
+local <span class='variable'>pretty_json_text</span> = <span class='object'>JSON</span><span class='method'>:encode_pretty(</span><span class='pseudo'>lua_table_or_value</span><span class='method'>)</span> <span class='comment'>-- <i>"pretty printed" version</i></span>
+</pre>
+</div>
+
+<p>Enjoy.</p>
+
+<p>(You might also be interested in <a href='http://lua-users.org/wiki/JsonModules'>this comparison of Lua JSON packages</a>.)</p>
+
+       <br style="clear:both; padding:0; margin:0"/>
+             </div>
+
+
+
+      <div class="post_meta">
+                      You can submit a comment below <b>|</b> <a href='http://regex.info/blog/lua/json/feed'>Comments via RSS</a>         
+                     <b>|</b> <a href="http://regex.info/blog/lua/json/trackback">Trackback</a>
+         
+               </div>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+			xmlns:dc="http://purl.org/dc/elements/1.1/"
+			xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/">
+		<rdf:Description rdf:about="http://regex.info/blog/lua/json"
+    dc:identifier="http://regex.info/blog/lua/json"
+    dc:title="Simple JSON Encode/Decode in Pure Lua"
+    trackback:ping="http://regex.info/blog/lua/json/trackback" />
+</rdf:RDF>  </div>
+
+  
+
+<div id="comments">
+  <div class="comments_header">
+
+  All 20 comments so far, oldest first...</div>
+
+
+    
+    <div class="comment alt" id="comment-43688">
+
+      
+      <div class="comment_guts "><p>When I add this line to a plugin I am writing I get an error from Lightroom</p>
+<p>MyPluginApi:28 cannot open JSON:lua: No such file or directory</p>
+<p>The thing that makes no sense to me is that the JSON.lua file is located in the same directory as MyPluginApi.lua</p>
+<p>Do you have an example plugin that might show the usage of this JSON library working?</p>
+<p>Thanks</p>
+<p><span class='jfriedl'>It looks as if you have a colon before &#8216;lua&#8217; rather than a dot. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">Robert</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">July 25th, 2011</span>
+        at
+             <span class="comment_time">6:30am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(4 years, 6 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-43688" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-43721">
+
+      
+      <div class="comment_guts "><p>Hi, I&#8217;ve recently noticed your module and included it in my <a href="http://lua-users.org/wiki/JsonModules" rel="nofollow">comparison of JSON modules on the Lua wiki</a>. Your module is one of the better pure-Lua JSON implementations and I guess I wouldn&#8217;t have needed to write my own if I had found yours earlier. I hope you don&#8217;t mind the inclusion in the list.</p>
+<p><span class='jfriedl'>Thanks for the link, and for the tests. I&#8217;ve pushed a new version that addresses some of the problems you found in your tests. Thanks! &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author"><a href='http://chiselapp.com/user/dhkolf/' rel='external nofollow' class='url'>David Kolf</a></span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">July 30th, 2011</span>
+        at
+             <span class="comment_time">7:30am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(4 years, 6 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-43721" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-44175">
+
+      
+      <div class="comment_guts "><p>Hi, </p>
+<p>thanks for this. I&#8217;ve just checked out the file, but I didn&#8217;t find any info regarding the license type, just your copyright notice. </p>
+<p>From a legal perspective, if the code comes without a license everyone can have a look but no one can use it, for any type of project. So are there any strings attached?</p>
+<p>Cheers, </p>
+<p>Michael</p>
+<p><span class='jfriedl'>Feel free to use it as you like. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">Michael</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">October 1st, 2011</span>
+        at
+             <span class="comment_time">7:51am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(4 years, 3 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-44175" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-44362">
+
+      
+      <div class="comment_guts "><p>I really like to use your module, but I can&#8217;t unless there is a license that clearly grants me permission to use it.  For example MIT, like  lua license itself, or BSD 2-clause.</p>
+<p>Best,<br />
+Maik</p>
+<p><span class='jfriedl'>I made it and I said you can use it. That should be enough. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">MaikB</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">October 21st, 2011</span>
+        at
+             <span class="comment_time">3:08am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(4 years, 3 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-44362" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-44875">
+
+      
+      <div class="comment_guts "><p>Err&#8230; something seems to be up with the comments in the file:<br />
+Lines 14 and 123 have <code>--   JSON = (loadfile "JSON.lua")() -- one-time load of the routines</code><br />
+While lines 24 and 111 have <code>--   JSON = (loadfile "JSON:lua")() -- one-time load of the routines</code></p>
+<p>That JSON<b>.</b>lua / JSON<b>:</b>lua is a bit inconsistent&#8230; Is that intentional? (Considering that Lightroom just gave me the error &#8220;attempt to call a nil value&#8221; when I tried loading JSON:lua, I doubt it&#8230;)</p>
+<p>Also, <em>THANK YOU</em> for publishing this. It&#8217;s making my first foray into Lightroom plugin development (and Lua) so much easier! </p>
+<p>(While I&#8217;m at it, any pointers on using relative paths in loadfile(), or, alternatively, finding out with directory is Lightroom&#8217;s working directory so I can build a relative path from that? Doing loadfile(JSON.lua) falls over with <code>File not found</code>, but putting the absolute path in works fine, but&#8230; won&#8217;t work for anyone but me, which is not an optimal solution. </p>
+<p>And Lightroom&#8217;s file access is too fast to show up in Process Explorer, so I can&#8217;t get anything from there.)</p>
+<p><span class='jfriedl'>Oops, thanks, I thought I fixed that once, but apparently not in my master source, so it reared its ugly head again. It should  be dot-&#8220;lua&#8221; in all situations, so I&#8217;ve fixed it (again), thanks. As for the path stuff, try <b>loadfile(LrPathUtils.child(_PLUGIN.path, &#8220;JSON.lua&#8221;))</b> or the like. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author"><a href='http://kyl191.net' rel='external nofollow' class='url'>Kyle (Singapore)</a></span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">December 23rd, 2011</span>
+        at
+             <span class="comment_time">12:41pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(4 years ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-44875" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-46788">
+
+      
+      <div class="comment_guts "><p>Hi, i want to use this library in my project. Could you please add some example how to use it. I have a json string. First i want to extract it to an array then to an object. and then get a string with the key &#8220;text&#8221;</p>
+<p>I&#8217;m new to lua, some exapmles would be neat</p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">joer</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">July 5th, 2012</span>
+        at
+             <span class="comment_time">11:03pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(3 years, 6 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-46788" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-48449">
+
+      
+      <div class="comment_guts "><p>I just included your JSON.lua file in my project: <a href="https://github.com/etu/i3luastatus" rel="nofollow">https://github.com/etu/i3luastatus</a>. I hope it&#8217;s fine.</p>
+<p><span class='jfriedl'>Sure, it&#8217;s fine, you&#8217;re not the only one these days. I realize, though, that there was no link back to this page, so it&#8217;s harder for folks to check for updates, so I&#8217;ve added a link in the code directly back to this page. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">etu</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">January 20th, 2013</span>
+        at
+             <span class="comment_time">2:48am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(3 years ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-48449" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-49238">
+
+      
+      <div class="comment_guts "><p>Hey,</p>
+<p>It says &#8220;Version 20130120.6 (version 6, Jan 20, 2013)&#8221;, but in the changelog at the bottom of the linked file, it stops at version 5. Is it really the 6th version ? And if yes, what&#8217;s different from version 5 ?</p>
+<p>Thank you.</p>
+<p><span class='jfriedl'>The only difference is in a comment, so there&#8217;s no real difference. Not sure why it didn&#8217;t update before, but it&#8217;s updated now; thanks for the heads up. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">g012</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">May 13th, 2013</span>
+        at
+             <span class="comment_time">9:44pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(2 years, 8 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-49238" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-50405">
+
+      
+      <div class="comment_guts "><p>Jeffrey,</p>
+<p>Thanks &#8211; great module.</p>
+<p>Would you mind putting the &#8216;Feel free to use this any way you like&#8221; comment in the code (or just say you are placing in the public domain) rather than just in the blog. That would make your intentions clear to anyone auditing code later, which sadly gets done.</p>
+<p>Alex</p>
+<p><span class='jfriedl'>I&#8217;ve updated the code and the web page to reflect a Creative Commons &#8220;CC-BY&#8221; license, which is what I really should have done from the beginning. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">Alex Bligh</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">October 4th, 2013</span>
+        at
+             <span class="comment_time">3:06am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(2 years, 3 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-50405" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-50577">
+
+      
+      <div class="comment_guts "><p>Hi Jeffrey,</p>
+<p>I&#8217;m new to lua (since yesterday) and I was playing around with your nice module.<br />
+I&#8217;m runnin into a few issues / unclarities though and hope to get them clarified.</p>
+<p>The pretty_encode does not generate the same output as the encode when it comes to &#8216;arrays&#8217;.<br />
+Consider the following:<br />
+<code><br />
+local Test = {1, 2, 3, [5]=5} -- would be a table with Test[4] = nil<br />
+-- encode output: [1, 2, 3, null, 5]<br />
+-- pretty_encode output: [1, 2, 3]<br />
+</code></p>
+<p>Secondly, in the comments you put:<br />
+<code><br />
+-- We need to inspect all the keys... if there are any strings, we'll convert to a JSON<br />
+-- object. If there are only numbers, it's a JSON array.<br />
+</code><br />
+Which would indicate that<br />
+<code><br />
+Test = { [1] = "a", [2] = "b", ["3"] = "c" }<br />
+</code><br />
+results in a JSON object (ther is &#8216;any strings&#8217;), instead i get a &#8216;mixed keys&#8217; error.</p>
+<p>Hope you can help me out,</p>
+<p>Mattie (Netherlands)</p>
+<p><span class='jfriedl'>Thanks for the heads up on these&#8230; I&#8217;ve pushed a new version that addresses both issues. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">Mattie</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">October 31st, 2013</span>
+        at
+             <span class="comment_time">5:25am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(2 years, 3 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-50577" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-50771">
+
+      
+      <div class="comment_guts "><p>Hey there from Spain!</p>
+<p>I just wanted to thank you for releasing this, it literally saved my life, as I am using Lua in a closed environment for a project, and the functions they provided me to work with JSON were pretty lame. </p>
+<p>And I must also say thanks for your pure lua sha1 implementation! ; )</p>
+<p>Regards.</p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author"><a href='http://pablophg.net' rel='external nofollow' class='url'>Pablo PHG</a></span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">November 28th, 2013</span>
+        at
+             <span class="comment_time">10:32pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(2 years, 2 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-50771" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-50912">
+
+      
+      <div class="comment_guts "><p>Hi Jeffrey</p>
+<p>Thanks for your JSON module. I stumbled across the following issue (using version 20131118.9):<br />
+JSON:decode(&#8220;[1,null,3]&#8221;) silently skips the &#8220;null&#8221; value and result in a table with two values only: {1, 3}.</p>
+<p>This seems to be because of the problem described here: <a href="http://lua-users.org/wiki/StoringNilsInTables" rel="nofollow">http://lua-users.org/wiki/StoringNilsInTables</a></p>
+<p>The following one-line change would allow an application to define a nilPlaceholder in your module:</p>
+<p>&#8212; JSON.lua.old	2013-11-18 13:07:36.000000000 +0100<br />
++++ JSON.lua	2013-12-20 14:47:28.636625937 +0100<br />
+@@ -506,7 +506,7 @@<br />
+       return false, start + 5</p>
+<p>    elseif text:find(&#8216;^null&#8217;, start) then<br />
+&#8211;      return nil, start + 4<br />
++      return JSON.nilPlaceholder, start + 4</p>
+<p>    else<br />
+       self:onDecodeError(&#8220;can&#8217;t parse JSON&#8221;, text, start, etc)</p>
+<p>For example:</p>
+<p>local NIL = {}<br />
+JSON.nilPlaceholder = NIL</p>
+<p>The calling application could then compare the received values with NIL. If nilPlaceholder is not defined, it is simply &#8220;nil&#8221;.</p>
+<p>Thanks and keep up the good work!</p>
+<p>Oliver (Switzerland)</p>
+<p><span class='jfriedl'>Yikes, I just (April 2014) noticed this comment sitting in moderation. Sorry. It turns out that I did notice a comment of someone else reporting the bug many months later, and have just (April 2014)  pushed a fix. The fix doesn&#8217;t require any placeholder thing&#8230; it just works.  Sorry for the delay(!) &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">Oliver Hitz</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">December 20th, 2013</span>
+        at
+             <span class="comment_time">10:51pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(2 years ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-50912" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-51072">
+
+      
+      <div class="comment_guts "><p>Hello Jeffrey,</p>
+<p>Thank you very much for making your code available.<br />
+When trying to decode a malformed JSON:</p>
+<pre>{"sleepCycle": 15,a"enabled": 1}</pre>
+<p>your code gets to line 550:</p>
+<pre>
+      -- should never get here... JSON parse errors should have been caught earlier
+      assert(false, value)
+</pre>
+<p>and fails. Although it says it should not get there, it&#8217;s there.<br />
+Anyway I think the right code should be:</p>
+<pre>
+      -- should never get here... JSON parse errors should have been caught earlier
+      -- assert(false, value)
+	   if self.assert then
+		  self.assert(false, message)
+	   else
+		  assert(false, message)
+	   end
+</pre>
+<p>To be able to catch the exception. Do you agree?<br />
+Best regards.</p>
+<p><span class='jfriedl'>Good catch&#8230; the &#8220;should never get here&#8221; comment is true only if the user&#8217;s JSON.assert actually breaks out of the pcall, as it does when I use it in Adobe Lightroom, so it&#8217;s not an appropriate comment for the general package, so I&#8217;ve updated it, and the code as you suggest (with s/message/value/). Thanks for the heads up. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">blue</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">January 16th, 2014</span>
+        at
+             <span class="comment_time">6:24am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(2 years ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-51072" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-51560">
+
+      
+      <div class="comment_guts "><p>Hi Jeffrey,</p>
+<p>When decoding [&#8220;1&#8243;,null,null,null,null,null,&#8221;marathon&#8221;], it returns an array of two elements ({1,marathon}).<br />
+It may be a normal behavior, but it would be helpful if it returns an array of 7 elements with nil values (something like {1,nil,nil,nil,nil,nil,marathon}).</p>
+<p>Thank you for your work, it saved me a lot of time, here in Canada <img src="http://regex.info/blog/wp-includes/images/smilies/simple-smile.png" alt=":)" class="wp-smiley" style="height: 1em; max-height: 1em;" /></p>
+<p><span class='jfriedl'>Good catch, thanks. I&#8217;ve pushed a fix. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">haddock</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">April 18th, 2014</span>
+        at
+             <span class="comment_time">1:53am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(1 year, 9 months ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-51560" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-53630">
+
+      
+      <div class="comment_guts "><p>Nice job: thank you!</p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">Rick77</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">May 19th, 2015</span>
+        at
+             <span class="comment_time">6:40pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(7 months, 27 days ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-53630" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-53806">
+
+      
+      <div class="comment_guts "><p>HI Jeffrey,<br />
+When decoding a 900K json file,  json lib  will cost 14M+  memory. I review json.lua, and find use many  stringcat .. operation at grok_string function.<br />
+so I change  VALUE = VALUE .. c  to tmp_stream:insert(c). diff code is here: <a href="https://gist.github.com/lvzixun/80e5b900b82059ebf5d7/revisions" rel="nofollow">https://gist.github.com/lvzixun/80e5b900b82059ebf5d7/revisions</a>.  using table.concat would be faster and reduce  string memory  allocation.  </p>
+<p>you can  review code : <a href="https://gist.github.com/lvzixun/80e5b900b82059ebf5d7" rel="nofollow">https://gist.github.com/lvzixun/80e5b900b82059ebf5d7</a>  😉</p>
+<p><span class='jfriedl'>Unfortunately, whatever this &#8220;insert&#8221; function is, it&#8217;s not available in the version of Lua that I use. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">zixun</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">June 12th, 2015</span>
+        at
+             <span class="comment_time">12:55pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(7 months, 3 days ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-53806" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-53893">
+
+      
+      <div class="comment_guts "><p>Forked this repo for LuaRocks. Do you have GitHub account for this?<br />
+<a href="https://github.com/jiyinyiyong/json-lua" rel="nofollow">https://github.com/jiyinyiyong/json-lua</a></p>
+<p><span class='jfriedl'>No, sorry, no GitHub. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author"><a href='http://tiye.me' rel='external nofollow' class='url'>jiyinyiyong</a></span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">June 26th, 2015</span>
+        at
+             <span class="comment_time">11:02pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(6 months, 19 days ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-53893" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-54362">
+
+      
+      <div class="comment_guts "><p>Hi Jeffrey,<br />
+thanks for the code. This is exactly what I was looking for. Works like a charme &#8211; in a Lightroom plugin!<br />
+So far, only simple JSON responses are decoded (did this with a regexp before), but it will probably  become more important when using more sophisticated WebAPIs of the Synology PhotoStation.</p>
+<p>Greetings from Berlin,</p>
+<p>Martin</p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author"><a href='https://github.com/flingo64/PhotoStation-Upload-Lr-Plugin' rel='external nofollow' class='url'>Martin</a></span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">September 19th, 2015</span>
+        at
+             <span class="comment_time">7:35am</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(3 months, 26 days ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-54362" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment alt" id="comment-54450">
+
+      
+      <div class="comment_guts "><p>Hi Jeffrey,<br />
+Thanks a lot for this code ! Excellent work !  We are using this serilizer together with Zabbix JSON-RPC API in a large distributed monitoring network. This code provided us with an excellent jumpstart at first when we made a prototype of the gateway from Zabbix to internal ESB. After a while we have decided not to touch anything as it works perfectly and performance is sufficient for this project. </p>
+<p>Thanks a lot again,<br />
+Greetings from Kazakhstan,<br />
+Pavel.</p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">Paul</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">October 7th, 2015</span>
+        at
+             <span class="comment_time">7:18pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(3 months, 8 days ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-54450" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  
+    <div class="comment " id="comment-54550">
+
+      
+      <div class="comment_guts "><p>Hello</p>
+<p>I am new to Lightroom plugin development: I can&#8217;t find the correct syntax to load your JSON.lua file. I have put the JSON.lua file in the plugin folder. I have tried some code found on this page:<br />
+JSON = (loadfile &#8220;JSON.lua&#8221;)()<br />
+JSON = assert(loadfile &#8220;JSON.lua&#8221;)()<br />
+JSON = loadfile(LrPathUtils.child(_PLUGIN.path, &#8220;JSON.lua&#8221;))<br />
+without success.<br />
+Could you please give the correct syntax to use (Lightroom 6 Plugin SDK ).<br />
+Thanks a lot<br />
+Thierry</p>
+<p><span class='jfriedl'>In Lightroom you can use <tt style='border:solid 1px white'>JSON = require "JSON.lua"</tt>, but note that Lightroom won&#8217;t recognize any file added to a plugin folder after it starts, so after having added the JSON.lua file, you have to restart Lightroom before anything will work. &mdash;Jeffrey</span></p>
+</div>
+      <div class="comment_meta">
+        &mdash; comment by
+        <span class="comment_author">Thierry</span>
+        on
+            <span class="comment_timestamp">
+             <span class="comment_date">October 26th, 2015</span>
+        at
+             <span class="comment_time">10:21pm</span>
+             <span class="comment_tz">JST</span>
+             <span class="comment_ago">(2 months, 20 days ago)</span>
+           </span>
+        &mdash;
+        <a class="comment_link" href="#comment-54550" title="">comment permalink</a>
+              </div>
+    </div>
+
+    
+  </div>
+
+
+ <div class='post_comment_box' id='respond'>
+ <div id="leavecomment" class="comments_header">Leave a comment...</div>
+
+  
+
+  
+  <form style='margin-bottom:30px' action="http://regex.info/blog/wp-comments-post.php" method="post" id="commentform">
+
+  
+  <p style='margin-bottom:0'><input type="text" name="author" id="author" value="" size="22" tabindex="1" />
+  <label for="author">Name </label></p>
+
+  <table border='0' cellpadding='0' cellspacing='0' style='margin:0pt; padding:0; margin-top:20px'><tr valign='top'><td>
+  <input type="text" name="email" id="email" value="" size="22" tabindex="2" />
+  </td><td width='10'></td><td><label for="email">Mail (optional; will not be published) </label>
+  <br/>
+
+	<p style="clear: both;" class="subscribe-to-comments">
+	<input type="checkbox" name="subscribe" id="subscribe" value="subscribe" style="width: auto;" />
+	<label for="subscribe">Notify me of followup comments, or when Jeffrey replies, via email.
+<br/>Fill in your email and check this box if you expect a reply from Jeffrey and don't want to keep checking the comments manually.</label>
+	</p>
+
+
+</td></tr></table>
+
+
+  <p style='margin-top:0'><input type="text" name="url" id="url" value="" size="22" tabindex="3" />
+  <label for="url">Website (if you have one)</label></p>
+
+  <p><input type="text" id="name" name="name"  size="22" tabindex="4" />
+  <label for="name">Enter &#8220;<b>Happy</b>&#8221; (without quotes) in this box (<b>required</b> &mdash; this helps stop spambots)</label></p>
+
+
+  
+  <p class='spam_warning'>All comments are invisible to others until Jeffrey approves them.</p>
+  <p style='margin-top:2px'>Please mention what part of the world you're writing from, if you don't mind.
+  It's always interesting to see where people are visiting from.</p>
+
+
+<!--
+  <table style='margin:0'><tr valign='baseline'><td style='color:red;white-space: nowrap'>IMPORTANT, MARCH 2015:</td><td style='color:#F88'>I'm traveling this month, and am unlikely to be able to read/respond to plugin support requests. Sorry.</td></tr></table>
+
+-->
+
+  <p><!--
+  <span class="format_inst">More or less plain text &mdash; see below for allowed markup</span>
+  <br/> -->
+  <textarea name="comment" id="comment" cols="99%" rows="10" tabindex="5"></textarea>
+  <br/>
+  <span class="format_desc">You can use the following tags: <tt class="format_tags">&lt;a href=&quot;&quot; title=&quot;&quot;&gt; &lt;abbr title=&quot;&quot;&gt; &lt;acronym title=&quot;&quot;&gt; &lt;b&gt; &lt;blockquote cite=&quot;&quot;&gt; &lt;cite&gt; &lt;code&gt; &lt;del datetime=&quot;&quot;&gt; &lt;em&gt; &lt;i&gt; &lt;q cite=&quot;&quot;&gt; &lt;s&gt; &lt;strike&gt; &lt;strong&gt; </tt></span></p>
+
+
+
+<!-- -->
+
+  <p><input name="submit" type="submit" id="submit" tabindex="6" value="Submit Comment" />
+  <input type="hidden" name="comment_post_ID" value="1584" />
+  </p>
+  <script src="http://regex.info/blog/?live-comment-preview.js" type="text/javascript"></script><div id="commentPreview"></div>
+  </form>
+  
+
+	<form action="" method="post">
+	<input type="hidden" name="solo-comment-subscribe" value="solo-comment-subscribe" />
+	<input type="hidden" name="postid" value="1584" />
+	<input type="hidden" name="ref" value="http%3A%2F%2Fregex.info%2Fblog%2Flua%2Fjson" />
+
+	<p class="solo-subscribe-to-comments">
+	Subscribe without commenting	<br />
+	<label for="solo-subscribe-email">E-Mail:	<input type="text" name="email" id="solo-subscribe-email" size="22" value="" /></label>
+	<input type="submit" name="submit" value="Subscribe" />
+	</p>
+	</form>
+
+
+  </div>
+
+
+
+</div>
+
+<hr/>   <div id="footer">
+    <p>
+      <b><a href='http://regex.info/blog/' class='quiet'>Jeffrey Friedl&#039;s Blog</a></b>
+<!--      <b>|</b> <a href="http://add.my.yahoo.com/rss?url=http://regex.info/blog/feed/"><img width="91" height="17" src="http://us.i1.yimg.com/us.yimg.com/i/us/my/addtomyyahoo4.gif" align="middle" border="0" alt="Add this blog to your My Yahoo! page"/></a> -->
+      <b>|</b> <a href="http://regex.info/blog/feed">Posts via RSS</a>
+      <b>|</b> <a href="http://regex.info/blog/comments/feed">Comments via RSS</a>
+      <b>|</b> Admin <a href="http://regex.info/blog/wp-login.php">Log in</a>     </p>
+   </div>
+</div>
+
+<!--[if lt IE 7]><script defer type="text/javascript" src="http://regex.info/i/s/pngfix.js"></script><![endif]-->
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+
+</body>
+</html>
