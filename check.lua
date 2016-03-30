@@ -71,11 +71,20 @@ local function parse_schedule(res)
 		local month_schedule_list = data.month_schedule_list
 		local month_len = #month_schedule_list
 
+		local have_month_ticket = 0
+
 		if month_len ~= 0 then
+			local mdata = month_schedule_list[1]
+			if 2 == mdata.ticket_status  then
+				have_month_ticket = 1
+			end
+		end
+
+		if 1 == have_month_ticket then
 			print("!!!Month ticket!!!")
-			local cmda="sleep 3;mail -s \"".."month".."\" -r \"renleilei5@btte.net\" renleilei5@btte.net </dev/null"
+			local cmda="sleep 60;mail -s \"".."month".."\" -r \"renleilei5@btte.net\" renleilei5@btte.net </dev/null"
 			os.execute(cmda)
-			local cmdb="sleep 3;mail -s \"".."month".."\" -r \"stoneforfun@aliyun.com\" stoneforfun@aliyun.com </dev/null"
+			local cmdb="sleep 60;mail -s \"".."month".."\" -r \"taice123@tom.com\" taice123@tom.com </dev/null"
 			os.execute(cmdb)
 		end
 			
@@ -89,9 +98,9 @@ local function parse_schedule(res)
 				--print("day="..day.date.." ticket_status="..day.ticket_status);
 				if 2 == day.ticket_status then
 					print("!!!Ticket!!! "..day.date.." "..day.ticket_status)
-					local cmda="sleep 3;mail -s \""..day.date.."\" -r \"renleilei5@btte.net\" renleilei5@btte.net </dev/null"
+					local cmda="sleep 60;mail -s \""..day.date.."\" -r \"renleilei5@btte.net\" renleilei5@btte.net </dev/null"
 					os.execute(cmda)
-					local cmdb="sleep 3;mail -s \""..day.date.."\" -r \"stoneforfun@aliyun.com\" stoneforfun@aliyun.com </dev/null"
+					local cmdb="sleep 60;mail -s \""..day.date.."\" -r \"taice123@tom.com\" taice123@tom.com </dev/null"
 					os.execute(cmdb)
 				end
 			--end
@@ -143,7 +152,7 @@ local function make_request()
 		print("----".. type(result).. "====".. table.concat(result))
 		for k, v in pairs(result) do
 			--print("k="..k.."v="..v);
-			if type(v) == 'string' then
+			if v ~= nil and type(v) == 'string' then
 				--print("v="..v)
 				local val = JSON:decode(v)
 				if type(val) == 'table' then
@@ -162,7 +171,7 @@ local function main()
 	while true do
 		make_request()
 		os.execute("echo -n \"Now is \"; " .."date +\"20%y-%m-%d %k:%M:%S\"")
-		os.execute('sleep 30')
+		os.execute('sleep 60')
 	end
 end
 
