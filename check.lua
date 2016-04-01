@@ -82,10 +82,11 @@ local function parse_schedule(res)
 
 		if 1 == have_month_ticket then
 			print("!!!Month ticket!!!")
-			local cmda="sleep 60;mail -s \"".."month".."\" -r \"renleilei5@btte.net\" renleilei5@btte.net </dev/null"
+			local cmda="sleep 3;mail -s \"".."month".."\" -r \"renleilei5@btte.net\" renleilei5@btte.net </dev/null"
 			os.execute(cmda)
-			local cmdb="sleep 60;mail -s \"".."month".."\" -r \"taice123@tom.com\" taice123@tom.com </dev/null"
+			local cmdb="sleep 3;mail -s \"".."month".."\" -r \"stoneforfun@aliyun.com\" stoneforfun@aliyun.com </dev/null"
 			os.execute(cmdb)
+			os.execute("sleep 190")
 		end
 			
 		local len = #schedule_list
@@ -98,10 +99,11 @@ local function parse_schedule(res)
 				--print("day="..day.date.." ticket_status="..day.ticket_status);
 				if 2 == day.ticket_status then
 					print("!!!Ticket!!! "..day.date.." "..day.ticket_status)
-					local cmda="sleep 60;mail -s \""..day.date.."\" -r \"renleilei5@btte.net\" renleilei5@btte.net </dev/null"
+					local cmda="sleep 3;mail -s \""..day.date.."\" -r \"renleilei5@btte.net\" renleilei5@btte.net </dev/null"
 					os.execute(cmda)
-					local cmdb="sleep 60;mail -s \""..day.date.."\" -r \"taice123@tom.com\" taice123@tom.com </dev/null"
+					local cmdb="sleep 3;mail -s \""..day.date.."\" -r \"stoneforfun@aliyun.com\" stoneforfun@aliyun.com </dev/null"
 					os.execute(cmdb)
+					os.execute("sleep 190")
 				end
 			--end
 			
@@ -171,7 +173,7 @@ local function main()
 	while true do
 		make_request()
 		os.execute("echo -n \"Now is \"; " .."date +\"20%y-%m-%d %k:%M:%S\"")
-		os.execute('sleep 60')
+		os.execute('sleep 30')
 	end
 end
 
